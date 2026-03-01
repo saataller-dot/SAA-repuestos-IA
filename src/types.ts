@@ -12,3 +12,7 @@ export interface Message {
   text: string;
   parts?: SparePart[];
 }
+
+export interface CartItem extends SparePart {
+  quantity: number;
+}

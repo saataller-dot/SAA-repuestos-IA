@@ -34,18 +34,18 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-3xl border border-black/5 shadow-xl overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
       {/* Header */}
-      <div className="bg-black p-3 sm:p-4 flex items-center justify-between">
+      <div className="bg-gray-900 p-4 sm:p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white">
-            <Bot size={20} />
+          <div className="w-10 h-10 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <Bot size={22} />
           </div>
           <div>
-            <h2 className="text-white font-semibold text-xs sm:text-sm">Asistente RepuestosIA</h2>
+            <h2 className="text-white font-black text-sm tracking-tight">Asistente RepuestosIA</h2>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-400 text-[8px] sm:text-[10px] uppercase font-bold tracking-widest">En línea</span>
+              <span className="text-emerald-400 text-[9px] uppercase font-black tracking-widest">En línea</span>
             </div>
           </div>
         </div>
@@ -74,22 +74,22 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
           <div 
             key={i} 
             className={cn(
-              "flex gap-3 max-w-[85%]",
+              "flex gap-3 max-w-[90%]",
               m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto"
             )}
           >
             <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+              "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
               m.role === 'user' ? "bg-gray-200 text-gray-600" : "bg-indigo-100 text-indigo-600"
             )}>
               {m.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
             
             <div className={cn(
-              "p-3.5 rounded-2xl text-sm leading-relaxed",
+              "p-4 rounded-3xl text-sm leading-relaxed",
               m.role === 'user' 
-                ? "bg-black text-white rounded-tr-none shadow-md" 
-                : "bg-white text-gray-800 rounded-tl-none border border-black/5 shadow-sm"
+                ? "bg-gray-900 text-white rounded-tr-none shadow-lg shadow-gray-100" 
+                : "bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-sm"
             )}>
               <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-p:my-1">
                 <Markdown>{m.text}</Markdown>
@@ -112,7 +112,7 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-3 sm:p-4 bg-white border-t border-black/5">
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6 bg-white border-t border-gray-100">
         <div className="relative">
           <input
             type="text"
@@ -120,18 +120,18 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ej: Pastillas de freno Hilux"
             disabled={isLoading}
-            className="w-full pl-4 pr-12 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-50"
+            className="w-full pl-6 pr-14 py-4 sm:py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all disabled:opacity-50 placeholder:text-gray-300"
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors disabled:bg-gray-300"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none active:scale-95"
           >
-            <Send size={16} />
+            <Send size={18} />
           </button>
         </div>
-        <p className="text-[8px] sm:text-[10px] text-gray-400 mt-2 text-center uppercase font-bold tracking-widest">
-          Gemini AI & Google Sheets
+        <p className="text-[9px] text-gray-300 mt-3 text-center uppercase font-black tracking-[0.2em]">
+          AI Powered Inventory
         </p>
       </form>
     </div>
