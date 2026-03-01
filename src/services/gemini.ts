@@ -37,20 +37,24 @@ export async function getAssistantResponse(
 
   let filteredParts = availableParts;
   if (allTerms.length > 0) {
-    filteredParts = availableParts.filter(p => 
+    const matches = availableParts.filter(p => 
       allTerms.some(term => 
         p.descripcion.toLowerCase().includes(term) || 
         p.marca.toLowerCase().includes(term) ||
         p.codigo.toLowerCase().includes(term)
       )
     );
+    // If we found matches, use them. If not, don't filter (show default inventory)
+    if (matches.length > 0) {
+      filteredParts = matches;
+    }
   }
 
-  // Limit to 40 most relevant parts to prevent token overflow and hanging
-  const limitedParts = filteredParts.slice(0, 40);
+  // Limit to 50 most relevant parts to prevent token overflow and hanging
+  const limitedParts = filteredParts.slice(0, 50);
   const partsContext = limitedParts.length > 0 
     ? `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Ref: ${p.codigo}] - $${p.precio} (Stock: ${p.stock ?? 'N/A'})`).join('\n')}`
-    : "No se encontraron repuestos específicos en la búsqueda inicial.";
+    : "No se encontraron repuestos en el sistema.";
 
   const contents = [
     ...history.map(m => ({

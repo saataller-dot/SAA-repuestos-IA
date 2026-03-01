@@ -44,10 +44,10 @@ function getCellValue(row: any, ...possibleKeys: string[]): any {
 }
 
 export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
-  const { id, gid, isPub } = extractSheetInfo(rawInput);
-
+  const trimmedInput = rawInput.trim();
+  
   // If no sheet ID or placeholder, return empty array
-  if (!id || id.includes('p_p_p_p')) {
+  if (!trimmedInput || trimmedInput.includes('p_p_p_p')) {
     console.warn('Google Sheet ID is not configured.');
     return [];
   }
@@ -55,11 +55,17 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
   // Construct potential URLs in order of preference
   const urls: string[] = [];
   
-  if (isPub) {
-    urls.push(`https://docs.google.com/spreadsheets/d/e/${id}/pub?output=csv${gid ? `&gid=${gid}` : ''}`);
+  // If it's already a full URL (like a Google Apps Script), use it directly
+  if (trimmedInput.startsWith('http')) {
+    urls.push(trimmedInput);
   } else {
-    urls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv${gid ? `&gid=${gid}` : ''}`);
-    urls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ''}`);
+    const { id, gid, isPub } = extractSheetInfo(trimmedInput);
+    if (isPub) {
+      urls.push(`https://docs.google.com/spreadsheets/d/e/${id}/pub?output=csv${gid ? `&gid=${gid}` : ''}`);
+    } else {
+      urls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv${gid ? `&gid=${gid}` : ''}`);
+      urls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ''}`);
+    }
   }
 
   for (const url of urls) {
@@ -67,17 +73,18 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
       console.log(`Attempting to fetch sheet from: ${url}`);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout
       
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
       
       if (response.ok) {
-        const contentType = response.headers.get('content-type');
+        const textData = await response.text();
         
-        // If the response is JSON (likely from a Google Apps Script)
-        if (contentType && contentType.includes('application/json')) {
-          const jsonData = await response.json();
+        // Try to parse as JSON first, regardless of content-type header
+        // (Apps Script sometimes returns text/plain or text/javascript)
+        try {
+          const jsonData = JSON.parse(textData);
           if (Array.isArray(jsonData)) {
             const parts: SparePart[] = jsonData.map((row: any, index: number) => {
               const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
@@ -97,9 +104,11 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
             console.log(`Successfully loaded ${parts.length} parts from JSON API.`);
             return parts;
           }
+        } catch (e) {
+          // Not JSON, continue to CSV parsing
         }
 
-        const csvData = await response.text();
+        const csvData = textData;
         
         // If the response is HTML, it's likely a login page (sheet is private)
         if (csvData.trim().toLowerCase().startsWith('<!doctype html') || csvData.includes('<html')) {
