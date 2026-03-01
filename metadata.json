@@ -1,0 +1,5 @@
+{
+  "name": "RepuestosIA - Asistente de Autopartes",
+  "description": "Una plataforma inteligente para la venta de repuestos online, gestionada por IA y conectada a Google Sheets.",
+  "requestFramePermissions": []
+}

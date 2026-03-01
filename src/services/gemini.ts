@@ -1,0 +1,90 @@
+import { GoogleGenAI } from "@google/genai";
+import { SparePart, Message } from "../types";
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
+
+const SYSTEM_INSTRUCTION = `
+Eres "RepuestosIA", un asistente experto en autopartes y repuestos.
+Tu objetivo es ayudar al usuario a encontrar el repuesto exacto que necesita.
+
+Sigue estos pasos:
+1. Saluda amigablemente y pregunta qué repuesto busca.
+2. Analiza la lista de repuestos proporcionada en el contexto (campos: codigo, descripcion, marca, precio, stock).
+3. Si encuentras coincidencias, muéstralas de forma clara mencionando la descripción, marca, precio y disponibilidad (stock).
+4. Si no encuentras la pieza exacta, ofrece alternativas basadas en la descripción o pide más detalles.
+5. Mantén un tono profesional, técnico pero accesible.
+6. Si el stock es 0, indica que no hay disponibilidad inmediata.
+
+IMPORTANTE: Responde siempre en español. No inventes repuestos que no estén en la lista si el usuario pregunta por disponibilidad específica.
+`;
+
+export async function getAssistantResponse(
+  userMessage: string,
+  history: Message[],
+  availableParts: SparePart[]
+) {
+  if (!apiKey) {
+    return "Error: La API Key de Gemini no está configurada. Por favor, asegúrate de que GEMINI_API_KEY esté en tus secretos.";
+  }
+
+  const model = "gemini-3-flash-preview";
+  
+  // Simple keyword-based filtering to reduce context size
+  const searchTerms = userMessage.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const historyTerms = history.slice(-2).flatMap(m => m.text.toLowerCase().split(/\s+/).filter(t => t.length > 2));
+  const allTerms = [...new Set([...searchTerms, ...historyTerms])];
+
+  let filteredParts = availableParts;
+  if (allTerms.length > 0) {
+    filteredParts = availableParts.filter(p => 
+      allTerms.some(term => 
+        p.descripcion.toLowerCase().includes(term) || 
+        p.marca.toLowerCase().includes(term) ||
+        p.codigo.toLowerCase().includes(term)
+      )
+    );
+  }
+
+  // Limit to 40 most relevant parts to prevent token overflow and hanging
+  const limitedParts = filteredParts.slice(0, 40);
+  const partsContext = limitedParts.length > 0 
+    ? `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Ref: ${p.codigo}] - $${p.precio} (Stock: ${p.stock ?? 'N/A'})`).join('\n')}`
+    : "No se encontraron repuestos específicos en la búsqueda inicial.";
+
+  const contents = [
+    ...history.map(m => ({
+      role: m.role,
+      parts: [{ text: m.text }]
+    })),
+    {
+      role: 'user' as const,
+      parts: [{ text: `Contexto de inventario:\n${partsContext}\n\nMensaje del usuario: ${userMessage}` }]
+    }
+  ];
+
+  try {
+    // Increased timeout to 30 seconds for better stability
+    const responsePromise = ai.models.generateContent({
+      model,
+      contents,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+      }
+    });
+
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error("Gemini API Timeout")), 30000)
+    );
+
+    const response = await Promise.race([responsePromise, timeoutPromise]) as any;
+
+    return response.text || "Lo siento, tuve un problema al procesar tu solicitud.";
+  } catch (error: any) {
+    if (error.message === "Gemini API Timeout") {
+      return "El asistente está tardando un poco más de lo habitual debido a la gran cantidad de datos. Por favor, intenta ser más específico con el nombre o código del repuesto.";
+    }
+    console.error("Gemini API Error:", error);
+    return "Error de conexión con el asistente.";
+  }
+}

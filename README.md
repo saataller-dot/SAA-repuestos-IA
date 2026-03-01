@@ -1,11 +1,29 @@
-<div align="center">
+# RepuestosIA - Catálogo de Repuestos con IA
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Este proyecto es un catálogo de repuestos automotrices que utiliza Google Sheets como base de datos y Gemini AI para asistir en las búsquedas.
 
-  <h1>Built with AI Studio</h2>
+## Requisitos
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- Node.js 18+
+- Una API Key de Google Gemini (puedes obtenerla en [Google AI Studio](https://aistudio.google.com/app/apikey))
+- Una hoja de cálculo de Google o un Google Apps Script que devuelva datos en JSON/CSV.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Configuración para Despliegue (Vercel / GitHub)
 
-</div>
+Para que la aplicación funcione correctamente después de subirla a GitHub y desplegarla en Vercel, debes configurar las siguientes **Variables de Entorno** en el panel de control de Vercel:
+
+1.  `VITE_GEMINI_API_KEY`: Tu clave de API de Gemini.
+2.  `VITE_GOOGLE_SHEET_ID`: La URL de tu Google Apps Script o el ID de tu hoja de cálculo.
+
+### Pasos para desplegar en Vercel:
+
+1.  Sube este código a un repositorio de GitHub.
+2.  Importa el proyecto en Vercel.
+3.  En la sección de **Environment Variables**, añade las dos variables mencionadas arriba.
+4.  Haz clic en **Deploy**.
+
+## Desarrollo Local
+
+1.  Instala las dependencias: `npm install`
+2.  Crea un archivo `.env` basado en `.env.example` y añade tus claves.
+3.  Inicia el servidor de desarrollo: `npm run dev`
