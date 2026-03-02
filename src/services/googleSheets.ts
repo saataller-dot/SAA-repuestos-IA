@@ -43,6 +43,29 @@ function getCellValue(row: any, ...possibleKeys: string[]): any {
   return null;
 }
 
+function formatImageUrl(url: any): string {
+  if (!url || String(url).trim() === '') {
+    return `https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&h=300&auto=format&fit=crop`;
+  }
+
+  let imageUrl = String(url).trim();
+
+  // Handle Google Drive links
+  // Format 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // Format 2: https://drive.google.com/open?id=FILE_ID
+  const driveMatch = imageUrl.match(/\/(?:file\/d\/|open\?id=)([a-zA-Z0-9-_]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+  }
+
+  // Ensure protocol
+  if (imageUrl.startsWith('www.')) {
+    imageUrl = `https://${imageUrl}`;
+  }
+
+  return imageUrl;
+}
+
 export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
   const trimmedInput = rawInput.trim();
   
@@ -89,10 +112,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
             const parts: SparePart[] = jsonData.map((row: any, index: number) => {
               const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
               const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
-              let fotos = getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl');
-              if (!fotos || String(fotos).trim() === '') {
-                fotos = `https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&h=300&auto=format&fit=crop`;
-              }
+              const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl'));
               const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
               const precioRaw = getCellValue(row, 'price', 'precio', 'valor', 'costo');
               const precio = parseFloat(String(precioRaw || 0).replace(/[^0-9.-]+/g,"")) || 0;
@@ -131,13 +151,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
                 const parts: SparePart[] = results.data.map((row: any, index: number) => {
                   const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
                   const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
-                  
-                  // Handle missing or empty photo field
-                  let fotos = getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl');
-                  if (!fotos || String(fotos).trim() === '') {
-                    fotos = `https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&h=300&auto=format&fit=crop`; // High quality auto parts placeholder
-                  }
-
+                  const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl'));
                   const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
                   const precioRaw = getCellValue(row, 'price', 'precio', 'valor', 'costo');
                   const precio = parseFloat(String(precioRaw || 0).replace(/[^0-9.-]+/g,"")) || 0;

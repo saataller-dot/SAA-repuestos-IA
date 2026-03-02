@@ -34,18 +34,18 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-900 p-4 sm:p-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-            <Bot size={22} />
+      <div className="bg-gray-900 p-3 sm:p-5 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <Bot size={18} className="sm:w-[22px] sm:h-[22px]" />
           </div>
           <div>
-            <h2 className="text-white font-black text-sm tracking-tight">Asistente RepuestosIA</h2>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-400 text-[9px] uppercase font-black tracking-widest">En línea</span>
+            <h2 className="text-white font-black text-xs sm:text-sm tracking-tight">Asistente IA</h2>
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-emerald-400 text-[8px] sm:text-[9px] uppercase font-black tracking-widest">Online</span>
             </div>
           </div>
         </div>
@@ -86,7 +86,7 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
             </div>
             
             <div className={cn(
-              "p-4 rounded-3xl text-sm leading-relaxed",
+              "p-3 sm:p-4 rounded-2xl sm:rounded-3xl text-xs sm:text-sm leading-relaxed",
               m.role === 'user' 
                 ? "bg-gray-900 text-white rounded-tr-none shadow-lg shadow-gray-100" 
                 : "bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-sm"

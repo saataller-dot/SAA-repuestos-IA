@@ -27,43 +27,50 @@ export function ProductCard({ part, onAddToCart }: ProductCardProps) {
         </div>
       </div>
       
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-2 gap-4">
-          <h3 className="font-bold text-gray-900 leading-tight text-lg line-clamp-2">{part.descripcion}</h3>
-          <span className="font-black text-xl text-indigo-600 whitespace-nowrap">
-            ${part.precio.toLocaleString()}
-          </span>
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col mb-4 gap-1">
+          <div className="flex justify-between items-start gap-4">
+            <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base md:text-lg">
+              {part.descripcion}
+            </h3>
+            <span className="font-black text-base sm:text-lg md:text-xl text-indigo-600 whitespace-nowrap">
+              ${part.precio.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="w-5 h-5 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+              <Car size={12} />
+            </div>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{part.marca}</span>
+          </div>
         </div>
         
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-              <Car size={14} />
-            </div>
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{part.marca}</span>
-          </div>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           {part.stock !== undefined && (
             <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+              "flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
               part.stock > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
             )}>
               <div className={cn("w-1.5 h-1.5 rounded-full", part.stock > 0 ? "bg-emerald-500" : "bg-red-500")} />
               {part.stock > 0 ? `Stock: ${part.stock}` : 'Sin Stock'}
             </div>
           )}
+          <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">
+            REF: {part.codigo}
+          </span>
         </div>
         
         <button
           onClick={() => onAddToCart(part)}
           disabled={part.stock === 0}
           className={cn(
-            "w-full py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition-all text-sm uppercase tracking-widest shadow-lg active:scale-95",
+            "w-full py-3 sm:py-4 rounded-2xl font-black flex items-center justify-center gap-2 sm:gap-3 transition-all text-[10px] sm:text-sm uppercase tracking-widest shadow-lg active:scale-95",
             part.stock === 0 
               ? "bg-gray-100 text-gray-400 shadow-none cursor-not-allowed" 
               : "bg-gray-900 text-white hover:bg-black shadow-gray-200"
           )}
         >
-          <ShoppingCart size={18} />
+          <ShoppingCart size={16} className="sm:w-[18px] sm:h-[18px]" />
           {part.stock === 0 ? 'Agotado' : 'Añadir al carrito'}
         </button>
       </div>
