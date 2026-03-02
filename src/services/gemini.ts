@@ -36,17 +36,24 @@ export async function getAssistantResponse(
   const allTerms = [...new Set([...searchTerms, ...historyTerms])];
 
   let filteredParts = availableParts;
-  if (allTerms.length > 0) {
-    const matches = availableParts.filter(p => 
-      allTerms.some(term => 
-        p.descripcion.toLowerCase().includes(term) || 
-        p.marca.toLowerCase().includes(term) ||
-        p.codigo.toLowerCase().includes(term)
-      )
-    );
-    // If we found matches, use them. If not, don't filter (show default inventory)
-    if (matches.length > 0) {
-      filteredParts = matches;
+  if (searchTerms.length > 0) {
+    // Priority 1: Match ALL terms from the current message (AND logic)
+    const strictMatches = availableParts.filter(p => {
+      const content = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
+      return searchTerms.every(term => content.includes(term));
+    });
+
+    if (strictMatches.length > 0) {
+      filteredParts = strictMatches;
+    } else {
+      // Priority 2: Match ANY term if no strict matches found (OR logic)
+      const looseMatches = availableParts.filter(p => {
+        const content = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
+        return searchTerms.some(term => content.includes(term));
+      });
+      if (looseMatches.length > 0) {
+        filteredParts = looseMatches;
+      }
     }
   }
 

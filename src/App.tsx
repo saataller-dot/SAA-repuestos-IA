@@ -73,13 +73,16 @@ export default function App() {
 
   // Filter parts based on search query
   const filteredParts = useMemo(() => {
-    if (!searchQuery) return []; // Don't show anything until a search is performed
-    const query = searchQuery.toLowerCase();
-    return parts.filter(p => 
-      p.descripcion.toLowerCase().includes(query) || 
-      p.marca.toLowerCase().includes(query) || 
-      p.codigo.toLowerCase().includes(query)
-    );
+    if (!searchQuery.trim()) return []; 
+    
+    const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 1);
+    if (terms.length === 0) return [];
+
+    return parts.filter(p => {
+      const searchContent = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
+      // Every term must be present in the content
+      return terms.every(term => searchContent.includes(term));
+    });
   }, [parts, searchQuery]);
 
   const handleSendMessage = async (text: string) => {
