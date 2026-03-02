@@ -59,8 +59,13 @@ function formatImageUrl(url: any): string {
   }
 
   // Ensure protocol
-  if (imageUrl.startsWith('www.')) {
-    imageUrl = `https://${imageUrl}`;
+  if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+    if (imageUrl.startsWith('www.')) {
+      imageUrl = `https://${imageUrl}`;
+    } else if (imageUrl.includes('.') && !imageUrl.includes(' ')) {
+      // Likely a domain without protocol
+      imageUrl = `https://${imageUrl}`;
+    }
   }
 
   return imageUrl;
@@ -112,7 +117,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
             const parts: SparePart[] = jsonData.map((row: any, index: number) => {
               const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
               const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
-              const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl'));
+              const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl', 'img', 'picture', 'pic', 'img_url', 'image_url'));
               const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
               const precioRaw = getCellValue(row, 'price', 'precio', 'valor', 'costo');
               const precio = parseFloat(String(precioRaw || 0).replace(/[^0-9.-]+/g,"")) || 0;
@@ -151,7 +156,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
                 const parts: SparePart[] = results.data.map((row: any, index: number) => {
                   const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
                   const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
-                  const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl'));
+                  const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl', 'img', 'picture', 'pic', 'img_url', 'image_url'));
                   const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
                   const precioRaw = getCellValue(row, 'price', 'precio', 'valor', 'costo');
                   const precio = parseFloat(String(precioRaw || 0).replace(/[^0-9.-]+/g,"")) || 0;
