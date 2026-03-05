@@ -75,10 +75,11 @@ export default function App() {
 
   // Filter parts based on search query
   const filteredParts = useMemo(() => {
-    if (!searchQuery.trim()) return []; 
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    if (!trimmedQuery) return parts; // Show all parts if no search
     
-    const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 1);
-    if (terms.length === 0) return [];
+    const terms = trimmedQuery.split(/\s+/).filter(t => t.length > 1);
+    if (terms.length === 0) return parts;
 
     return parts.filter(p => {
       const searchContent = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
@@ -284,8 +285,13 @@ export default function App() {
                 />
                 {searchQuery && (
                   <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSearchQuery('');
+                    }}
+                    className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-indigo-600 transition-colors z-10"
+                    aria-label="Limpiar búsqueda"
                   >
                     <X size={20} />
                   </button>
@@ -319,8 +325,8 @@ export default function App() {
                 </div>
               ) : filteredParts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-                  {filteredParts.map(part => (
-                    <ProductCard key={part.codigo} part={part} onAddToCart={addToCart} />
+                  {filteredParts.map((part, index) => (
+                    <ProductCard key={`${part.codigo}-${part.descripcion}-${index}`} part={part} onAddToCart={addToCart} />
                   ))}
                 </div>
               ) : searchQuery ? (

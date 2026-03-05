@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { SparePart } from '../types';
-import { ShoppingCart, Car } from 'lucide-react';
+import { ShoppingCart, Car, ImageOff } from 'lucide-react';
 import { cn } from '../App';
 
 interface ProductCardProps {
@@ -7,19 +8,37 @@ interface ProductCardProps {
   onAddToCart: (part: SparePart) => void;
 }
 
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3';
+
 export function ProductCard({ part, onAddToCart }: ProductCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const isPlaceholder = !part.fotos || part.fotos.includes(PLACEHOLDER_IMAGE);
+  const showNoImageNote = imageError || isPlaceholder;
+
   return (
     <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 group">
       <div className="aspect-[4/3] relative overflow-hidden bg-gray-50">
         <img
           src={part.fotos}
           alt={part.descripcion}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className={cn(
+            "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700",
+            showNoImageNote && "opacity-40 grayscale"
+          )}
           referrerPolicy="no-referrer"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&h=300&auto=format&fit=crop';
+            setImageError(true);
+            (e.target as HTMLImageElement).src = `${PLACEHOLDER_IMAGE}?q=80&w=400&h=300&auto=format&fit=crop`;
           }}
         />
+        
+        {showNoImageNote && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/5 backdrop-blur-[2px]">
+            <ImageOff size={32} className="text-gray-400 mb-2" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Imagen no disponible</span>
+          </div>
+        )}
+
         <div className="absolute top-4 right-4">
           <span className="bg-white/90 backdrop-blur-md text-gray-900 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm border border-gray-100">
             REF: {part.codigo}

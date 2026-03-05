@@ -115,7 +115,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
           const jsonData = JSON.parse(textData);
           if (Array.isArray(jsonData)) {
             const parts: SparePart[] = jsonData.map((row: any, index: number) => {
-              const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
+              const codigo = String(getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`).trim();
               const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
               const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl', 'img', 'picture', 'pic', 'img_url', 'image_url'));
               const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
@@ -126,8 +126,16 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
               
               return { codigo, descripcion, fotos, marca, precio, stock };
             });
-            console.log(`Successfully loaded ${parts.length} parts from JSON API.`);
-            return parts;
+
+            // Deduplicate by code ONLY (the unique reference)
+            const uniqueParts = parts.filter((part, index, self) =>
+              index === self.findIndex((t) => (
+                t.codigo === part.codigo
+              ))
+            );
+
+            console.log(`Successfully loaded ${uniqueParts.length} unique parts from JSON API.`);
+            return uniqueParts;
           }
         } catch (e) {
           // Not JSON, continue to CSV parsing
@@ -154,7 +162,7 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
                 }
 
                 const parts: SparePart[] = results.data.map((row: any, index: number) => {
-                  const codigo = getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`;
+                  const codigo = String(getCellValue(row, 'Codigo', 'codigo', 'cod', 'id', 'referencia') || `ID-${index}`).trim();
                   const descripcion = getCellValue(row, 'Repuesto', 'descripcion', 'nombre', 'articulo', 'pieza', 'name') || 'Sin descripción';
                   const fotos = formatImageUrl(getCellValue(row, 'image', 'fotos', 'foto', 'imagen', 'url', 'link', 'imageUrl', 'img', 'picture', 'pic', 'img_url', 'image_url'));
                   const marca = getCellValue(row, 'Marca', 'marca', 'fabricante', 'brand', 'category') || 'Genérico';
@@ -166,8 +174,15 @@ export async function fetchSpareParts(rawInput: string): Promise<SparePart[]> {
                   return { codigo, descripcion, fotos, marca, precio, stock };
                 });
                 
-                console.log(`Successfully loaded ${parts.length} parts.`);
-                resolve(parts);
+                // Deduplicate by code ONLY (the unique reference)
+                const uniqueParts = parts.filter((part, index, self) =>
+                  index === self.findIndex((t) => (
+                    t.codigo === part.codigo
+                  ))
+                );
+
+                console.log(`Successfully loaded ${uniqueParts.length} unique parts.`);
+                resolve(uniqueParts);
               },
               error: (error: any) => {
                 console.error('CSV Parse Error:', error);
