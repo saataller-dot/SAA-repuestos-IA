@@ -11,7 +11,7 @@ Tu objetivo es ayudar al usuario a encontrar el repuesto exacto que necesita.
 Sigue estos pasos:
 1. Saluda amigablemente y pregunta qué repuesto busca.
 2. Analiza la lista de repuestos proporcionada en el contexto (campos: codigo, descripcion, marca, precio, stock).
-3. Si encuentras coincidencias, muéstralas de forma clara mencionando la descripción, marca, precio y disponibilidad (stock).
+3. Si encuentras coincidencias, muéstralas de forma clara mencionando la descripción, marca, referencia o código, precio y disponibilidad (stock).
 4. Si el usuario parece interesado en un repuesto específico, incluye un botón de compra usando el formato especial: [COMPRAR:CODIGO] al final de la descripción del producto.
 5. Si no encuentras la pieza exacta, ofrece alternativas basadas en la descripción o pide más detalles.
 6. Mantén un tono profesional, técnico pero accesible.
@@ -72,7 +72,7 @@ export async function getAssistantResponse(
   if (isGreeting) {
     partsContext = "El usuario está saludando. No muestres productos todavía, solo responde al saludo y pregunta qué necesita.";
   } else if (limitedParts.length > 0) {
-    partsContext = `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Ref: ${p.codigo}] - $${p.precio} (Stock: ${p.stock ?? 'N/A'})`).join('\n')}`;
+    partsContext = `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Referencia: ${p.codigo}] - Marca: ${p.marca} - Precio: $${p.precio} - Stock: ${p.stock ?? 'N/A'}`).join('\n')}`;
   } else {
     partsContext = "No se encontraron repuestos que coincidan con la búsqueda del usuario en el sistema.";
   }
