@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { SparePart } from '../types';
-import { ShoppingCart, Car, ImageOff } from 'lucide-react';
+import { ShoppingCart, Car, ImageOff, X, Maximize2 } from 'lucide-react';
 import { cn } from '../App';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ProductCardProps {
   part: SparePart;
@@ -12,12 +13,17 @@ const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1486262715619-67b85
 
 export function ProductCard({ part, onAddToCart }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const isPlaceholder = !part.fotos || part.fotos.includes(PLACEHOLDER_IMAGE);
   const showNoImageNote = imageError || isPlaceholder;
 
   return (
+    <>
     <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 group">
-      <div className="aspect-[4/3] relative overflow-hidden bg-gray-50">
+      <div 
+        className="aspect-[4/3] relative overflow-hidden bg-gray-50 cursor-zoom-in"
+        onClick={() => setIsModalOpen(true)}
+      >
         <img
           src={part.fotos}
           alt={part.descripcion}
@@ -31,6 +37,10 @@ export function ProductCard({ part, onAddToCart }: ProductCardProps) {
             (e.target as HTMLImageElement).src = `${PLACEHOLDER_IMAGE}?q=80&w=400&h=300&auto=format&fit=crop`;
           }}
         />
+        
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 flex items-center justify-center">
+          <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-50 group-hover:scale-100" size={32} />
+        </div>
         
         {showNoImageNote && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/20 backdrop-blur-[1px]">
@@ -96,5 +106,54 @@ export function ProductCard({ part, onAddToCart }: ProductCardProps) {
         </button>
       </div>
     </div>
+
+    <AnimatePresence>
+      {isModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsModalOpen(false)}
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
+        >
+          <motion.button
+            initial={{ scale: 0, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 90 }}
+            className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsModalOpen(false);
+            }}
+          >
+            <X size={32} />
+          </motion.button>
+
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative max-w-5xl w-full max-h-[85vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={part.fotos}
+              alt={part.descripcion}
+              className="w-full h-full object-contain rounded-3xl shadow-2xl"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `${PLACEHOLDER_IMAGE}?q=80&w=1200&h=800&auto=format&fit=crop`;
+              }}
+            />
+            <div className="mt-6 text-center">
+              <h3 className="text-white text-xl sm:text-2xl font-black uppercase tracking-widest mb-2">{part.descripcion}</h3>
+              <p className="text-white/50 text-sm font-bold tracking-[0.3em] uppercase">{part.marca} • REF: {part.codigo}</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
