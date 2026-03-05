@@ -98,13 +98,22 @@ export default function App() {
       const assistantMsg: Message = { role: 'model', text: response };
       setMessages(prev => [...prev, assistantMsg]);
       
-      // Update search query based on AI response (simple heuristic)
-      setSearchQuery(text); 
+      // We removed setSearchQuery(text) to keep the search bar independent
+      // and avoid confusing the user when they want it blank.
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { role: 'model', text: "Lo siento, hubo un error al procesar tu mensaje." }]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const addToCartByCode = (code: string) => {
+    const part = parts.find(p => p.codigo === code);
+    if (part) {
+      addToCart(part);
+      // Optional: show some feedback or open cart
+      setShowCart(true);
     }
   };
 
@@ -216,6 +225,7 @@ export default function App() {
                 messages={messages} 
                 onSendMessage={handleSendMessage} 
                 isLoading={isLoading} 
+                onAddToCartByCode={addToCartByCode}
               />
             </div>
           </div>
@@ -270,8 +280,16 @@ export default function App() {
                   placeholder="Buscar repuesto o modelo..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] pl-14 sm:pl-16 pr-5 sm:pr-6 py-4 sm:py-6 shadow-sm focus:ring-0 focus:border-indigo-500 outline-none transition-all text-base sm:text-lg font-medium placeholder:text-gray-300"
+                  className="w-full bg-white border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] pl-14 sm:pl-16 pr-12 sm:pr-14 py-4 sm:py-6 shadow-sm focus:ring-0 focus:border-indigo-500 outline-none transition-all text-base sm:text-lg font-medium placeholder:text-gray-300"
                 />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
               </div>
             </div>
 

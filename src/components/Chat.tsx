@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, ShoppingCart, X } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { Message } from '../types';
 import { clsx, type ClassValue } from 'clsx';
@@ -13,9 +13,45 @@ interface ChatProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
   isLoading: boolean;
+  onAddToCartByCode?: (code: string) => void;
 }
 
-export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
+const MessageContent = ({ text, onAddToCartByCode }: { text: string, onAddToCartByCode?: (code: string) => void }) => {
+  // Regex to find [COMPRAR:CODE] or [COMPRAR: CODE]
+  const buyRegex = /\[COMPRAR\s*:\s*([a-zA-Z0-9-_]+)\]/gi;
+  
+  // Split text by the regex
+  const parts = text.split(buyRegex);
+  
+  if (parts.length === 1) {
+    return <Markdown>{text}</Markdown>;
+  }
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (i % 2 === 0) {
+          return part ? <Markdown key={i}>{part}</Markdown> : null;
+        } else {
+          const code = part;
+          return (
+            <div key={i} className="my-3">
+              <button
+                onClick={() => onAddToCartByCode?.(code)}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-100"
+              >
+                <ShoppingCart size={14} />
+                Añadir al carrito
+              </button>
+            </div>
+          );
+        }
+      })}
+    </>
+  );
+};
+
+export function Chat({ messages, onSendMessage, isLoading, onAddToCartByCode }: ChatProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +128,7 @@ export function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
                 : "bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-sm"
             )}>
               <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-p:my-1">
-                <Markdown>{m.text}</Markdown>
+                <MessageContent text={m.text} onAddToCartByCode={onAddToCartByCode} />
               </div>
             </div>
           </div>

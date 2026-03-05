@@ -12,11 +12,15 @@ Sigue estos pasos:
 1. Saluda amigablemente y pregunta qué repuesto busca.
 2. Analiza la lista de repuestos proporcionada en el contexto (campos: codigo, descripcion, marca, precio, stock).
 3. Si encuentras coincidencias, muéstralas de forma clara mencionando la descripción, marca, precio y disponibilidad (stock).
-4. Si no encuentras la pieza exacta, ofrece alternativas basadas en la descripción o pide más detalles.
-5. Mantén un tono profesional, técnico pero accesible.
-6. Si el stock es 0, indica que no hay disponibilidad inmediata.
+4. Si el usuario parece interesado en un repuesto específico, incluye un botón de compra usando el formato especial: [COMPRAR:CODIGO] al final de la descripción del producto.
+5. Si no encuentras la pieza exacta, ofrece alternativas basadas en la descripción o pide más detalles.
+6. Mantén un tono profesional, técnico pero accesible.
+7. Si el stock es 0, indica que no hay disponibilidad inmediata.
 
-IMPORTANTE: Responde siempre en español. No inventes repuestos que no estén en la lista si el usuario pregunta por disponibilidad específica.
+IMPORTANTE: 
+- Responde siempre en español. 
+- No inventes repuestos que no estén en la lista.
+- El formato [COMPRAR:CODIGO] es vital para que el usuario pueda agregar al carrito desde el chat. Úsalo solo cuando menciones un producto específico que esté disponible.
 `;
 
 export async function getAssistantResponse(
@@ -32,11 +36,15 @@ export async function getAssistantResponse(
   
   // Simple keyword-based filtering to reduce context size
   const searchTerms = userMessage.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-  const historyTerms = history.slice(-2).flatMap(m => m.text.toLowerCase().split(/\s+/).filter(t => t.length > 2));
+  const historyTerms = history.slice(-3).flatMap(m => m.text.toLowerCase().split(/\s+/).filter(t => t.length > 2));
   const allTerms = [...new Set([...searchTerms, ...historyTerms])];
 
-  let filteredParts = availableParts;
-  if (searchTerms.length > 0) {
+  // Common greetings that shouldn't trigger a full inventory search
+  const isGreeting = ['hola', 'buenos', 'buenas', 'saludos', 'que tal', 'como estas'].some(g => userMessage.toLowerCase().includes(g)) && searchTerms.length < 3;
+
+  let filteredParts: SparePart[] = [];
+  
+  if (!isGreeting && allTerms.length > 0) {
     // Priority 1: Match ALL terms from the current message (AND logic)
     const strictMatches = availableParts.filter(p => {
       const content = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
@@ -57,11 +65,17 @@ export async function getAssistantResponse(
     }
   }
 
-  // Limit to 50 most relevant parts to prevent token overflow and hanging
-  const limitedParts = filteredParts.slice(0, 50);
-  const partsContext = limitedParts.length > 0 
-    ? `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Ref: ${p.codigo}] - $${p.precio} (Stock: ${p.stock ?? 'N/A'})`).join('\n')}`
-    : "No se encontraron repuestos en el sistema.";
+  // Limit to 40 most relevant parts
+  const limitedParts = filteredParts.slice(0, 40);
+  
+  let partsContext = "";
+  if (isGreeting) {
+    partsContext = "El usuario está saludando. No muestres productos todavía, solo responde al saludo y pregunta qué necesita.";
+  } else if (limitedParts.length > 0) {
+    partsContext = `Inventario relevante (${limitedParts.length} items):\n${limitedParts.map(p => `- ${p.descripcion} [Ref: ${p.codigo}] - $${p.precio} (Stock: ${p.stock ?? 'N/A'})`).join('\n')}`;
+  } else {
+    partsContext = "No se encontraron repuestos que coincidan con la búsqueda del usuario en el sistema.";
+  }
 
   const contents = [
     ...history.map(m => ({
