@@ -23,7 +23,7 @@ export function ProductCard({ part, onAddToCart }: ProductCardProps) {
           alt={part.descripcion}
           className={cn(
             "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700",
-            showNoImageNote && "opacity-40 grayscale"
+            showNoImageNote && "opacity-70 grayscale-[50%]"
           )}
           referrerPolicy="no-referrer"
           onError={(e) => {
@@ -33,9 +33,11 @@ export function ProductCard({ part, onAddToCart }: ProductCardProps) {
         />
         
         {showNoImageNote && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/5 backdrop-blur-[2px]">
-            <ImageOff size={32} className="text-gray-400 mb-2" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Imagen no disponible</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/20 backdrop-blur-[1px]">
+            <div className="bg-white/90 p-3 rounded-full shadow-xl mb-3 scale-110">
+              <ImageOff size={24} className="text-gray-600" />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white drop-shadow-md bg-gray-900/40 px-3 py-1 rounded-lg">Imagen no disponible</span>
           </div>
         )}
 
