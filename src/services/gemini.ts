@@ -12,7 +12,8 @@ Sigue estos pasos:
 1. Saluda amigablemente y pregunta qué repuesto busca.
 2. Analiza la lista de repuestos proporcionada en el contexto (campos: codigo, descripcion, marca, precio, stock).
 3. Si encuentras coincidencias, muéstralas de forma clara mencionando la descripción, marca, referencia o código, precio y disponibilidad (stock).
-4. Si el usuario parece interesado en un repuesto específico, incluye un botón de compra usando el formato especial: [COMPRAR:CODIGO] al final de la descripción del producto.
+4. NOTA SOBRE MARCAS: El campo "marca" a veces contiene categorías (como "General"). Si la descripción del producto menciona una marca específica (ej: "Filtro Toyota"), utiliza SIEMPRE la marca mencionada en la descripción al responder.
+5. Si el usuario parece interesado en un repuesto específico, incluye un botón de compra usando el formato especial: [COMPRAR:CODIGO] al final de la descripción del producto.
 5. Si no encuentras la pieza exacta, ofrece alternativas basadas en la descripción o pide más detalles.
 6. Mantén un tono profesional, técnico pero accesible.
 7. Si el stock es 0, indica que no hay disponibilidad inmediata.
@@ -35,35 +36,49 @@ export async function getAssistantResponse(
 
   const model = "gemini-3-flash-preview";
   
-  // Simple keyword-based filtering to reduce context size
-  const searchTerms = userMessage.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-  const historyTerms = history.slice(-3).flatMap(m => m.text.toLowerCase().split(/\s+/).filter(t => t.length > 2));
+  // Refined search terms extraction
+  const stopWords = ['para', 'con', 'del', 'las', 'los', 'una', 'uno', 'busco', 'necesito', 'donde', 'venden', 'tiene', 'tienen', 'hay', 'que', 'quien', 'como', 'cuando'];
+  const searchTerms = userMessage.toLowerCase()
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, " ")
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !stopWords.includes(t));
+
+  const historyTerms = history.slice(-3).flatMap(m => 
+    m.text.toLowerCase()
+      .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, " ")
+      .split(/\s+/)
+      .filter(t => t.length > 2 && !stopWords.includes(t))
+  );
+  
   const allTerms = [...new Set([...searchTerms, ...historyTerms])];
 
   // Common greetings that shouldn't trigger a full inventory search
-  const isGreeting = ['hola', 'buenos', 'buenas', 'saludos', 'que tal', 'como estas'].some(g => userMessage.toLowerCase().includes(g)) && searchTerms.length < 3;
+  const isGreeting = ['hola', 'buenos', 'buenas', 'saludos', 'que tal', 'como estas'].some(g => userMessage.toLowerCase().includes(g)) && searchTerms.length < 2;
 
   let filteredParts: SparePart[] = [];
   
-  if (!isGreeting && allTerms.length > 0) {
-    // Priority 1: Match ALL terms from the current message (AND logic)
-    const strictMatches = availableParts.filter(p => {
+  if (!isGreeting && searchTerms.length > 0) {
+    // Scoring system: count how many search terms match each part
+    const scoredParts = availableParts.map(p => {
       const content = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
-      return searchTerms.every(term => content.includes(term));
-    });
-
-    if (strictMatches.length > 0) {
-      filteredParts = strictMatches;
-    } else {
-      // Priority 2: Match ANY term if no strict matches found (OR logic)
-      const looseMatches = availableParts.filter(p => {
-        const content = `${p.descripcion} ${p.marca} ${p.codigo}`.toLowerCase();
-        return searchTerms.some(term => content.includes(term));
+      let score = 0;
+      
+      // Current message terms are worth more
+      searchTerms.forEach(term => {
+        if (content.includes(term)) score += 10;
       });
-      if (looseMatches.length > 0) {
-        filteredParts = looseMatches;
-      }
-    }
+      
+      // History terms are worth less but help context
+      historyTerms.forEach(term => {
+        if (content.includes(term)) score += 1;
+      });
+
+      return { part: p, score };
+    })
+    .filter(item => item.score >= 10) // Must match at least one term from current message
+    .sort((a, b) => b.score - a.score);
+
+    filteredParts = scoredParts.map(item => item.part);
   }
 
   // Limit to 40 most relevant parts
